@@ -1,0 +1,19 @@
+{
+	"name": "Go",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"golang.Go",
+				"hediet.debug-visualizer"
+			],
+			"settings": {
+				"gopls": {
+					"formatting.gofumpt": true
+				}
+			}
+		}
+	}
+}
