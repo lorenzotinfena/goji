@@ -9,9 +9,9 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-      - uses: golangci/golangci-lint-action@v3
+      - uses: actions/checkout@v4.1.1
+      - uses: actions/setup-go@v5.0.0
+      - uses: golangci/golangci-lint-action@v3.7.0
         with:
           version: latest
           args: -E gofmt
