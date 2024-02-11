@@ -2,82 +2,123 @@
 package graph
 
 import (
+	"github.com/lorenzotinfena/goji/collections"
 	cl "github.com/lorenzotinfena/goji/collections"
+	"github.com/lorenzotinfena/goji/collections/heap"
 	"github.com/lorenzotinfena/goji/utils"
 	constr "github.com/lorenzotinfena/goji/utils/constraints"
 )
 
-type ShortedPathVertex[V comparable, W constr.Integer | constr.Float] struct {
+type DijkstraNode[V comparable, W constr.Integer | constr.Float] struct {
 	Vertex   V
-	Previous *ShortedPathVertex[V, W]
+	Previous *DijkstraNode[V, W]
 	Cost     W
 }
 
 type unitDijkstraIterator[V comparable] struct {
+	toAnalyze cl.Queue[DijkstraNode[V, int]]
 	adjacents func(V) []V
-	toAnalyze cl.Queue[ShortedPathVertex[V, int]]
-	visited   cl.HashSet[V]
+	addV      func(V)
+	containsV func(V) bool
 }
 
 func (it *unitDijkstraIterator[V]) HasNext() bool {
 	return it.toAnalyze.Len() != 0
 }
 
-func (it *unitDijkstraIterator[V]) Next() ShortedPathVertex[V, int] {
+func (it *unitDijkstraIterator[V]) Next() DijkstraNode[V, int] {
 	cur := it.toAnalyze.Dequeue()
 	for _, v := range it.adjacents(cur.Vertex) {
-		if !it.visited.Contains(v) {
-			it.toAnalyze.Enqueue(ShortedPathVertex[V, int]{Vertex: v, Previous: &cur, Cost: cur.Cost + 1})
-			it.visited.Add(v)
+		if !it.containsV(v) {
+			it.toAnalyze.Enqueue(DijkstraNode[V, int]{Vertex: v, Previous: &cur, Cost: cur.Cost + 1})
+			it.addV(v)
 		}
 	}
 	return cur
 }
 
-func UnitDijkstra[V comparable](start V, adjacents func(V) []V, addV func() V, containsV func(V)) utils.Iterator[ShortedPathVertex[V, int]] {
-	toAnalyze := *cl.NewQueue[ShortedPathVertex[V, int]]()
-	toAnalyze.Enqueue(ShortedPathVertex[V, int]{Vertex: start, Previous: nil, Cost: 0})
-	visited := *cl.NewHashSet[V]()
-	visited.Add(start)
+func UnitDijkstra[V comparable](start V, adjacents func(V) []V, addV func(V), containsV func(V) bool) utils.Iterator[DijkstraNode[V, int]] {
+	toAnalyze := *cl.NewQueue[DijkstraNode[V, int]]()
+	toAnalyze.Enqueue(DijkstraNode[V, int]{Vertex: start, Previous: nil, Cost: 0})
+	addV(start)
 
 	return &unitDijkstraIterator[V]{
 		adjacents: adjacents,
 		toAnalyze: toAnalyze,
-		visited:   visited,
+		addV:      addV,
+		containsV: containsV,
 	}
 }
 
-/* //TODO
-type weightedGraphDijkstraIterator[V comparable] struct {
-	bfsIterator utils.Iterator[V]
-	last        *ShortedPathVertex[V, int]
+type weightedDijkstraIterator[V comparable, W constr.Integer | constr.Float] struct {
+	toAnalyze        *heap.FibonacciHeap[V]
+	adjacents        func(V) []collections.Pair[V, W]
+	dijkstraSet      func(V, *DijkstraNode[V, W])
+	dijkstraGet      func(V) *DijkstraNode[V, W]
+	dijkstraContains func(V) bool
 }
 
-func (it *unitGraphDijkstraIterator[V]) HasNext() bool {
-	return it.bfsIterator.HasNext()
+func (it *weightedDijkstraIterator[V, W]) HasNext() bool {
+	return it.toAnalyze.Len() != 0
 }
 
-func (it *unitGraphDijkstraIterator[V]) Next() ShortedPathVertex[V, int] {
-	current := it.bfsIterator.Next()
-	if it.last == nil {
-		return ShortedPathVertex[V, int]{
-			Vertex:   current,
-			Previous: it.last,
-			Cost:     0,
+func (it *weightedDijkstraIterator[V, W]) Next() DijkstraNode[V, W] {
+	curr := it.toAnalyze.Pop()
+	for _, next := range it.adjacents(curr) {
+		costToNext := it.dijkstraGet(curr).Cost + next.Second
+		if !it.dijkstraContains(next.First) {
+			it.dijkstraSet(next.First, &DijkstraNode[V, W]{next.First, it.dijkstraGet(curr), it.dijkstraGet(curr).Cost + next.Second})
+			it.toAnalyze.Push(next.First)
+		} else if costToNext < it.dijkstraGet(next.First).Cost {
+			it.dijkstraGet(next.First).Cost = costToNext
+			it.dijkstraGet(next.First).Previous = it.dijkstraGet(curr)
+			it.toAnalyze.DecreaseKey(next.First, next.First)
 		}
-	} else {
-		return ShortedPathVertex[V, int]{
-			Vertex:   current,
-			Previous: it.last,
-			Cost:     it.last.Cost + 1,
-		}
 	}
+	return *it.dijkstraGet(curr)
 }
 
-func (g UnitGraph[V]) Dijkstra(from V) utils.Iterator[ShortedPathVertex[V, int]] {
-	return &unitGraphDijkstraIterator[V]{
-		bfsIterator: g.GetIteratorBFS(from),
-		last:        nil,
+type weightedDijkstraFibonacciHeapWrapper[V comparable] struct {
+	set func(V, *heap.FibonacciHeapNode[V])
+	get func(V) *heap.FibonacciHeapNode[V]
+}
+
+func (w weightedDijkstraFibonacciHeapWrapper[V]) Add(item V, node *heap.FibonacciHeapNode[V]) {
+	w.set(item, node)
+}
+
+func (w weightedDijkstraFibonacciHeapWrapper[V]) GetOne(item V) *heap.FibonacciHeapNode[V] {
+	return w.get(item)
+}
+
+func (w weightedDijkstraFibonacciHeapWrapper[V]) Contains(_ V) bool {
+	panic("this should not be called")
+}
+
+func (w weightedDijkstraFibonacciHeapWrapper[V]) Remove(_ V, _ *heap.FibonacciHeapNode[V]) {
+}
+
+func WeightedDijkstra[V comparable, W constr.Integer | constr.Float](
+	start V,
+	adjacents func(V) []collections.Pair[V, W],
+
+	dijkstraSet func(V, *DijkstraNode[V, W]),
+	dijkstraGet func(V) *DijkstraNode[V, W],
+	dijkstraContains func(V) bool,
+	fibonacciSet func(V, *heap.FibonacciHeapNode[V]),
+	fibonacciGet func(V) *heap.FibonacciHeapNode[V],
+) utils.Iterator[DijkstraNode[V, W]] {
+	toAnalyze := heap.NewFibonacciHeap[V](
+		func(v1, v2 V) bool { return dijkstraGet(v1).Cost < dijkstraGet(v2).Cost },
+		weightedDijkstraFibonacciHeapWrapper[V]{fibonacciSet, fibonacciGet})
+	toAnalyze.Push(start)
+	dijkstraSet(start, &DijkstraNode[V, W]{start, nil, W(0)})
+
+	return &weightedDijkstraIterator[V, W]{
+		toAnalyze,
+		adjacents,
+		dijkstraSet,
+		dijkstraGet,
+		dijkstraContains,
 	}
 }
-*/
