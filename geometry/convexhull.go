@@ -39,15 +39,8 @@ func GrahamScan[E constraints.Signed | constraints.Float](v [][2]E) [][2]E {
 		if v[i] == start {
 			continue
 		}
-		for len(stack) != 1 {
-			if orientation(
-				stack[len(stack)-2],
-				stack[len(stack)-1],
-				v[i]) > 0 {
-				break
-			}
+		for len(stack) != 1 && orientation(stack[len(stack)-2], stack[len(stack)-1], v[i]) <= 0 {
 			stack = stack[:len(stack)-1]
-
 		}
 		stack = append(stack, v[i])
 	}
