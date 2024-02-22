@@ -4,29 +4,29 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/lorenzotinfena/goji/geometry"
+	"github.com/lorenzotinfena/goji/math/geometry"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGrahamScan(t *testing.T) {
 	points := [][2]int{
-		{-1, -3},
-		{-1, -3},
-		{-3, -1},
-		{-2, -1},
-		{-1, -2},
 		{-2, 1},
-		{-1, 3},
-		{-1, 1},
-		{-1, 1},
-		{0, 0},
-		{0, 0},
 		{1, 1},
+		{-2, -1},
 		{1, 1},
 		{2, 3},
+		{-3, -1},
+		{-1, 1},
+		{0, 0},
 		{1, -1},
-		{0, -2},
+		{-1, -2},
+		{-1, -3},
+		{-1, 3},
+		{-1, 1},
+		{-1, -3},
 		{0, -3},
+		{0, 0},
+		{0, -2},
 	}
 	convexhull := geometry.GrahamScan(points)
 	sort.Slice(convexhull, func(i, j int) bool {

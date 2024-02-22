@@ -40,3 +40,9 @@ func Diff[T constraints.Integer | constraints.Float](a, b T) T {
 		return b - a
 	}
 }
+
+// Assumption:
+// - Multiplication is associative
+func Pow2[B constraints.Float | constraints.Integer, P constraints.Integer](base B) B {
+	return base * base
+}
