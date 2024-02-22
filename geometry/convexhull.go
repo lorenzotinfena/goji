@@ -1,7 +1,6 @@
 package geometry
 
 import (
-	"fmt"
 	"sort"
 
 	"github.com/lorenzotinfena/goji/utils/constraints"
@@ -32,9 +31,6 @@ func GrahamScan[E constraints.Signed | constraints.Float](v [][2]E) [][2]E {
 	start := v[0]
 	v = v[1:]
 	sort.Slice(v, func(i, j int) bool {
-		fmt.Println(v[i])
-		fmt.Println(v[j])
-		fmt.Println(orientation(start, v[i], v[j]))
 		return orientation(start, v[i], v[j]) > E(0)
 	})
 
