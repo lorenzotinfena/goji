@@ -35,7 +35,7 @@ func GrahamScan[E constraints.Signed | constraints.Float](v [][2]E) [][2]E {
 
 	// Remove duplicates of starting point (to avoid a bad sorting)
 	tmp := v[:0]
-	for i := 0; i < len(v); {
+	for i := 0; i < len(v); i++ {
 		if v[i] != start {
 			tmp = append(tmp, v[i])
 		}
