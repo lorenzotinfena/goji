@@ -33,13 +33,22 @@ func GrahamScan[E constraints.Signed | constraints.Float](v [][2]E) [][2]E {
 		}
 	}
 
+	// Remove duplicates of starting point (to avoid a bad sorting)
+	tmp := v[:0]
+	for i := 0; i < len(v); {
+		if v[i] != start {
+			tmp = append(tmp, v[i])
+		}
+	}
+	v = tmp
+
 	// sort by orientation
 	sort.Slice(v, func(i, j int) bool {
 		return orientation(start, v[i], v[j]) > E(0)
 	})
 
 	// Keep only farthest point in colinear points
-	tmp := v[:0]
+	tmp = v[:0]
 	for i := 0; i < len(v); {
 		farthest := v[i]
 		i++
@@ -54,18 +63,11 @@ func GrahamScan[E constraints.Signed | constraints.Float](v [][2]E) [][2]E {
 	v = tmp
 
 	stack := [][2]E{start}
-
-	if len(v) > 0 && v[0] != start {
-		// this check the case when v contains starting points,
-		// which implies that no points other than starting point and duplicates are seen
-
-		// maintaining monotonic stack
-		for i := 0; i < len(v); i++ {
-			for len(stack) != 1 && orientation(stack[len(stack)-2], stack[len(stack)-1], v[i]) <= 0 {
-				stack = stack[:len(stack)-1]
-			}
-			stack = append(stack, v[i])
+	for i := 0; i < len(v); i++ {
+		for len(stack) != 1 && orientation(stack[len(stack)-2], stack[len(stack)-1], v[i]) <= 0 {
+			stack = stack[:len(stack)-1]
 		}
+		stack = append(stack, v[i])
 	}
 	return stack
 }
