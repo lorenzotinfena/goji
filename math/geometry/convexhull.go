@@ -20,7 +20,8 @@ func orientation[E constraints.Signed | constraints.Float](p1, p2, p3 [2]E) E {
 	}
 }
 
-// Clockwise ordered Graham scan algorithm on 2-dim euclidean space E
+// Graham scan algorithm on 2-dim euclidean space E
+// Returns clockwise ordered convex hull
 func GrahamScan[E constraints.Signed | constraints.Float](points [][2]E) [][2]E {
 	if len(points) == 0 {
 		return [][2]E{}
@@ -73,6 +74,7 @@ func GrahamScan[E constraints.Signed | constraints.Float](points [][2]E) [][2]E 
 	return stack
 }
 
+// Returns clockwise ordered convex hull
 func ChansAlgorithm[E constraints.Signed | constraints.Float](v [][2]E) [][2]E {
 	maxT := (bits.LeadingZeros(0) - bits.LeadingZeros(uint(bits.LeadingZeros(0)-bits.LeadingZeros(uint(len(v)))-1)) - 1) + 1
 	for t := 1; t <= maxT; t++ {
