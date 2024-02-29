@@ -11,7 +11,7 @@ func Hash(data any) uint {
 	f := fnv.New64a()
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
-	enc.Encode(data)
+	_ = enc.Encode(data)
 	f.Write(buf.Bytes())
 	return uint(f.Sum64())
 }
