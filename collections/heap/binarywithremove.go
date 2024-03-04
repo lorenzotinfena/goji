@@ -48,11 +48,15 @@ func (h *BinaryHeapWithRemove[T]) Push(value T) {
 func (h *BinaryHeapWithRemove[T]) Pop() (res T) {
 	res = h.v[0]
 	h.m.Remove(h.v[0], 0)
-	h.v[0] = h.v[h.Len()-1]
-	h.m.Remove(h.v[0], h.Len()-1)
-	h.m.Add(h.v[0], 0)
+	if len(h.v) > 1 {
+		h.v[0] = h.v[h.Len()-1]
+		h.m.Remove(h.v[0], h.Len()-1)
+		h.m.Add(h.v[0], 0)
+	}
 	h.v = h.v[:h.Len()-1]
-	h.heapifyDown(0)
+	if len(h.v) > 0 {
+		h.heapifyDown(0)
+	}
 	return
 }
 
