@@ -2,7 +2,6 @@
 package graph
 
 import (
-	"github.com/lorenzotinfena/goji/collections"
 	cl "github.com/lorenzotinfena/goji/collections"
 	"github.com/lorenzotinfena/goji/collections/heap"
 	"github.com/lorenzotinfena/goji/utils"
@@ -52,7 +51,7 @@ func UnitDijkstra[V comparable](start V, adjacents func(V) []V, addV func(V), co
 
 type weightedDijkstraIterator[V comparable, W constr.Integer | constr.Float] struct {
 	toAnalyze        *heap.FibonacciHeap[V]
-	adjacents        func(V) []collections.Pair[V, W]
+	adjacents        func(V) []cl.Pair[V, W]
 	dijkstraSet      func(V, *DijkstraNode[V, W])
 	dijkstraGet      func(V) *DijkstraNode[V, W]
 	dijkstraContains func(V) bool
@@ -78,39 +77,21 @@ func (it *weightedDijkstraIterator[V, W]) Next() DijkstraNode[V, W] {
 	return *it.dijkstraGet(curr)
 }
 
-type weightedDijkstraFibonacciHeapWrapper[V comparable] struct {
-	set func(V, *heap.FibonacciHeapNode[V])
-	get func(V) *heap.FibonacciHeapNode[V]
-}
-
-func (w weightedDijkstraFibonacciHeapWrapper[V]) Add(item V, node *heap.FibonacciHeapNode[V]) {
-	w.set(item, node)
-}
-
-func (w weightedDijkstraFibonacciHeapWrapper[V]) GetOne(item V) *heap.FibonacciHeapNode[V] {
-	return w.get(item)
-}
-
-func (w weightedDijkstraFibonacciHeapWrapper[V]) Contains(_ V) bool {
-	panic("this should not be called")
-}
-
-func (w weightedDijkstraFibonacciHeapWrapper[V]) Remove(_ V, _ *heap.FibonacciHeapNode[V]) {
-}
-
 func WeightedDijkstra[V comparable, W constr.Integer | constr.Float](
 	start V,
-	adjacents func(V) []collections.Pair[V, W],
+	adjacents func(V) []cl.Pair[V, W],
 
 	dijkstraSet func(V, *DijkstraNode[V, W]),
 	dijkstraGet func(V) *DijkstraNode[V, W],
 	dijkstraContains func(V) bool,
-	fibonacciSet func(V, *heap.FibonacciHeapNode[V]),
-	fibonacciGet func(V) *heap.FibonacciHeapNode[V],
+	fibonacciSet func(V, []*heap.FibonacciHeapNode[V]),
+	fibonacciGet func(V) []*heap.FibonacciHeapNode[V],
+	fibonacciContains func(V) bool,
+	fibonacciRemove func(V),
 ) utils.Iterator[DijkstraNode[V, W]] {
 	toAnalyze := heap.NewFibonacciHeap[V](
 		func(v1, v2 V) bool { return dijkstraGet(v1).Cost < dijkstraGet(v2).Cost },
-		weightedDijkstraFibonacciHeapWrapper[V]{fibonacciSet, fibonacciGet})
+		fibonacciSet, fibonacciGet, dijkstraContains, fibonacciRemove)
 	toAnalyze.Push(start)
 	dijkstraSet(start, &DijkstraNode[V, W]{start, nil, W(0)})
 
