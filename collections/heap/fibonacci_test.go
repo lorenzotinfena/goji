@@ -11,7 +11,15 @@ import (
 
 func TestFibonacci(t *testing.T) {
 	b := heap.NewBinaryHeapWithRemove[int](utils.Prioritize[int](), collections.NewMultiHashMap[int, int]())
-	f := heap.NewFibonacciHeap[int](utils.Prioritize[int](), collections.NewMultiHashMap[int, *heap.FibonacciHeapNode[int]]())
+	m := collections.NewHashMap[int, []*heap.FibonacciHeapNode[int]]()
+	f := heap.NewFibonacciHeap[int](
+		utils.Prioritize[int](),
+		m.Set, func(i int) []*heap.FibonacciHeapNode[int] { return m.Get(i) }, func(i int) bool { return m.Contains(i) }, m.Remove)
+
+	f.Push(0)
+	f.Push(1)
+	f.Remove(0)
+	f.Pop()
 
 	b.Push(5)
 	b.Push(6)
@@ -64,7 +72,9 @@ func TestFibonacci(t *testing.T) {
 }
 
 func TestFibonacci2(t *testing.T) {
-	f := heap.NewFibonacciHeap[int](utils.Prioritize[int](), collections.NewMultiHashMap[int, *heap.FibonacciHeapNode[int]]())
+	m := collections.NewHashMap[int, []*heap.FibonacciHeapNode[int]]()
+	f := heap.NewFibonacciHeap[int](utils.Prioritize[int](),
+		m.Set, func(i int) []*heap.FibonacciHeapNode[int] { return m.Get(i) }, func(i int) bool { return m.Contains(i) }, m.Remove)
 
 	f.Push(5)
 	f.Push(6)

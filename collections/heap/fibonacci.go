@@ -2,8 +2,6 @@ package heap
 
 import (
 	"math/bits"
-
-	"github.com/lorenzotinfena/goji/collections"
 )
 
 type FibonacciHeapNode[T comparable] struct {
@@ -14,17 +12,29 @@ type FibonacciHeapNode[T comparable] struct {
 }
 
 type FibonacciHeap[T comparable] struct {
-	prior    func(T, T) bool
-	size     int
-	nodesMap collections.MultiMap[T, *FibonacciHeapNode[T]]
-	rootlist *FibonacciHeapNode[T] // The first node is always the first to be popped
+	prior            func(T, T) bool
+	size             int
+	nodesMapSet      func(T, []*FibonacciHeapNode[T])
+	nodesMapGet      func(T) []*FibonacciHeapNode[T]
+	nodesMapContains func(T) bool
+	nodesMapRemove   func(T)
+	rootlist         *FibonacciHeapNode[T] // The first node is always the first to be popped
 }
 
-func NewFibonacciHeap[T comparable](prior func(T, T) bool, nodesMap collections.MultiMap[T, *FibonacciHeapNode[T]]) *FibonacciHeap[T] {
+func NewFibonacciHeap[T comparable](
+	prior func(T, T) bool,
+	nodesMapSet func(T, []*FibonacciHeapNode[T]),
+	nodesMapGet func(T) []*FibonacciHeapNode[T],
+	nodesMapContains func(T) bool,
+	nodesMapRemove func(T),
+) *FibonacciHeap[T] {
 	return &FibonacciHeap[T]{
-		prior:    prior,
-		nodesMap: nodesMap,
-		rootlist: nil,
+		prior:            prior,
+		nodesMapSet:      nodesMapSet,
+		nodesMapGet:      nodesMapGet,
+		nodesMapContains: nodesMapContains,
+		nodesMapRemove:   nodesMapRemove,
+		rootlist:         nil,
 	}
 }
 
@@ -36,7 +46,11 @@ func (fb *FibonacciHeap[T]) Push(value T) {
 	fb.size++
 	node := &FibonacciHeapNode[T]{value: value}
 
-	fb.nodesMap.Add(value, node)
+	if fb.nodesMapContains(value) {
+		fb.nodesMapSet(value, append(fb.nodesMapGet(value), node))
+	} else {
+		fb.nodesMapSet(value, []*FibonacciHeapNode[T]{node})
+	}
 
 	node.left = node
 	node.right = node
@@ -90,7 +104,7 @@ func (fb *FibonacciHeap[T]) appendSiblings(toappend *FibonacciHeapNode[T]) {
 }
 
 func (fb *FibonacciHeap[T]) Contains(value T) bool {
-	return fb.nodesMap.Contains(value)
+	return fb.nodesMapContains(value)
 }
 
 func (fb *FibonacciHeap[T]) mark(node *FibonacciHeapNode[T]) {
@@ -117,14 +131,27 @@ func (fb *FibonacciHeap[T]) mark(node *FibonacciHeapNode[T]) {
 }
 
 func (fb *FibonacciHeap[T]) Remove(value T) {
-	node := fb.nodesMap.GetOne(value)
+	tmp := fb.nodesMapGet(value)
+	node := tmp[len(tmp)-1]
 	// Handle case where value is the only minimum
 	if node == fb.rootlist {
-		fb.Pop()
-		return
+		fb.pop()
+	} else {
+		fb.remove(node.value)
+	}
+}
+
+// Assumptions:
+// - last value in nodesMapGet(value) != fb.rootlist
+func (fb *FibonacciHeap[T]) remove(value T) {
+	tmp := fb.nodesMapGet(value)
+	node := tmp[len(tmp)-1]
+	if len(tmp) == 1 {
+		fb.nodesMapRemove(node.value)
+	} else {
+		fb.nodesMapSet(node.value, tmp[:len(tmp)-1])
 	}
 
-	fb.nodesMap.Remove(value, node)
 	if node.parent == nil {
 		node.left.right = node.right
 		node.right.left = node.left
@@ -150,9 +177,18 @@ func (fb *FibonacciHeap[T]) Remove(value T) {
 // Assumptions:
 // - prior(old, new) = false
 func (fb *FibonacciHeap[T]) DecreaseKey(old, new T) {
-	node := fb.nodesMap.GetOne(old)
-	fb.nodesMap.Remove(old, node)
-	fb.nodesMap.Add(new, node)
+	tmp := fb.nodesMapGet(old)
+	node := tmp[len(tmp)-1]
+	if len(tmp) == 1 {
+		fb.nodesMapRemove(old)
+	} else {
+		fb.nodesMapSet(old, tmp[:len(tmp)-1])
+	}
+	if fb.Contains(new) {
+		fb.nodesMapSet(new, append(fb.nodesMapGet(new), node))
+	} else {
+		fb.nodesMapSet(new, []*FibonacciHeapNode[T]{node})
+	}
 
 	node.value = new
 	if node.parent != nil {
@@ -175,8 +211,26 @@ func (fb *FibonacciHeap[T]) DecreaseKey(old, new T) {
 }
 
 func (fb *FibonacciHeap[T]) Pop() T {
+	tmp := fb.nodesMapGet(fb.rootlist.value)
+	if tmp[len(tmp)-1] == fb.rootlist {
+		return fb.pop()
+	} else {
+		fb.remove(tmp[len(tmp)-1].value)
+		return tmp[len(tmp)-1].value
+	}
+}
+
+// Assumptions:
+// - last value in nodesMapGet(fb.rootlist.value) == fb.rootlist
+func (fb *FibonacciHeap[T]) pop() T {
 	toreturn := fb.rootlist.value
-	fb.nodesMap.Remove(toreturn, fb.rootlist)
+
+	tmp := fb.nodesMapGet(toreturn)
+	if len(tmp) == 1 {
+		fb.nodesMapRemove(fb.rootlist.value)
+	} else {
+		fb.nodesMapSet(fb.rootlist.value, tmp[:len(tmp)-1])
+	}
 
 	fb.size--
 	if fb.size == 0 {
