@@ -92,8 +92,8 @@ func WeightedDijkstra[V comparable, W constr.Integer | constr.Float](
 	toAnalyze := heap.NewFibonacciHeap[V](
 		func(v1, v2 V) bool { return dijkstraGet(v1).Cost < dijkstraGet(v2).Cost },
 		fibonacciSet, fibonacciGet, dijkstraContains, fibonacciRemove)
-	toAnalyze.Push(start)
 	dijkstraSet(start, &DijkstraNode[V, W]{start, nil, W(0)})
+	toAnalyze.Push(start)
 
 	return &weightedDijkstraIterator[V, W]{
 		toAnalyze,
