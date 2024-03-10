@@ -144,34 +144,17 @@ func (fb *FibonacciHeap[T]) Remove(value T) {
 // Assumptions:
 // - last value in nodesMapGet(value) != fb.rootlist
 func (fb *FibonacciHeap[T]) remove(value T) {
-	tmp := fb.nodesMapGet(value)
-	node := tmp[len(tmp)-1]
-	if len(tmp) == 1 {
-		fb.nodesMapRemove(node.value)
-	} else {
-		fb.nodesMapSet(node.value, tmp[:len(tmp)-1])
-	}
-
-	if node.parent == nil {
-		node.left.right = node.right
-		node.right.left = node.left
-	} else {
-		node.parent.degree--
-		if node.parent.child == node {
-			if node.parent.degree == 0 {
-				node.parent.child = nil
-			} else {
-				node.parent.child = node.right
-			}
+	tmp := fb.prior
+	fb.prior = func(t1, t2 T) bool {
+		if t1 == value {
+			return true
+		} else {
+			return tmp(t1, t2)
 		}
-		node.left.right = node.right
-		node.right.left = node.left
-		fb.mark(node.parent)
 	}
-
-	fb.appendSiblings(node.child)
-
-	fb.size--
+	fb.DecreaseKey(value, value)
+	fb.prior = tmp
+	fb.pop()
 }
 
 // Assumptions:
