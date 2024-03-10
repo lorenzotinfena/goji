@@ -61,7 +61,7 @@ func (it *weightedDijkstraIterator[V, W]) HasNext() bool {
 	return it.toAnalyze.Len() != 0
 }
 
-func (it *weightedDijkstraIterator[V, W]) Next() DijkstraNode[V, W] {
+func (it *weightedDijkstraIterator[V, W]) Next() *DijkstraNode[V, W] {
 	curr := it.toAnalyze.Pop()
 	for _, next := range it.adjacents(curr) {
 		costToNext := it.dijkstraGet(curr).Cost + next.Second
@@ -74,7 +74,7 @@ func (it *weightedDijkstraIterator[V, W]) Next() DijkstraNode[V, W] {
 			it.toAnalyze.DecreaseKey(next.First, next.First)
 		}
 	}
-	return *it.dijkstraGet(curr)
+	return it.dijkstraGet(curr)
 }
 
 func WeightedDijkstra[V comparable, W constr.Integer | constr.Float](
@@ -88,7 +88,7 @@ func WeightedDijkstra[V comparable, W constr.Integer | constr.Float](
 	fibonacciGet func(V) []*heap.FibonacciHeapNode[V],
 	fibonacciContains func(V) bool,
 	fibonacciRemove func(V),
-) utils.Iterator[DijkstraNode[V, W]] {
+) utils.Iterator[*DijkstraNode[V, W]] {
 	toAnalyze := heap.NewFibonacciHeap[V](
 		func(v1, v2 V) bool { return dijkstraGet(v1).Cost < dijkstraGet(v2).Cost },
 		fibonacciSet, fibonacciGet, dijkstraContains, fibonacciRemove)
