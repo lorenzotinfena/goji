@@ -15,7 +15,7 @@ type DijkstraNode[V comparable, W constr.Integer | constr.Float] struct {
 }
 
 type unitDijkstraIterator[V comparable] struct {
-	toAnalyze cl.Queue[DijkstraNode[V, int]]
+	toAnalyze cl.Queue[*DijkstraNode[V, int]]
 	adjacents func(V) []V
 	addV      func(V)
 	containsV func(V) bool
@@ -25,25 +25,25 @@ func (it *unitDijkstraIterator[V]) HasNext() bool {
 	return it.toAnalyze.Len() != 0
 }
 
-func (it *unitDijkstraIterator[V]) Next() DijkstraNode[V, int] {
+func (it *unitDijkstraIterator[V]) Next() *DijkstraNode[V, int] {
 	cur := it.toAnalyze.Dequeue()
 	for _, v := range it.adjacents(cur.Vertex) {
 		if !it.containsV(v) {
-			it.toAnalyze.Enqueue(DijkstraNode[V, int]{Vertex: v, Previous: &cur, Cost: cur.Cost + 1})
+			it.toAnalyze.Enqueue(&DijkstraNode[V, int]{Vertex: v, Previous: cur, Cost: cur.Cost + 1})
 			it.addV(v)
 		}
 	}
 	return cur
 }
 
-func UnitDijkstra[V comparable](start V, adjacents func(V) []V, addV func(V), containsV func(V) bool) utils.Iterator[DijkstraNode[V, int]] {
-	toAnalyze := *cl.NewQueue[DijkstraNode[V, int]]()
-	toAnalyze.Enqueue(DijkstraNode[V, int]{Vertex: start, Previous: nil, Cost: 0})
+func UnitDijkstra[V comparable](start V, adjacents func(V) []V, addV func(V), containsV func(V) bool) utils.Iterator[*DijkstraNode[V, int]] {
+	toAnalyze := cl.NewQueue[*DijkstraNode[V, int]]()
+	toAnalyze.Enqueue(&DijkstraNode[V, int]{Vertex: start, Previous: nil, Cost: 0})
 	addV(start)
 
 	return &unitDijkstraIterator[V]{
 		adjacents: adjacents,
-		toAnalyze: toAnalyze,
+		toAnalyze: *toAnalyze,
 		addV:      addV,
 		containsV: containsV,
 	}
