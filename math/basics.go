@@ -43,6 +43,24 @@ func Diff[T constraints.Integer | constraints.Float](a, b T) T {
 
 // Assumption:
 // - Multiplication is associative
-func Pow2[B constraints.Float | constraints.Integer, P constraints.Integer](base B) B {
+func Pow2[B constraints.Float | constraints.Integer](base B) B {
 	return base * base
+}
+
+// Assumption:
+// - x >= 0
+func Factorial[T constraints.Integer](x T, mod T) T {
+	res := T(1)
+	for x > 1 {
+		res *= x
+		res %= mod
+		x--
+	}
+	return res
+}
+
+// Assumption:
+// - x and mod are coprimes
+func ModularInverse[T constraints.Integer](x T, mod T) T {
+	return PowMod(x, mod-2, mod)
 }

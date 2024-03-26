@@ -31,3 +31,20 @@ func Pow[B constraints.Float | constraints.Integer, P constraints.Integer](base 
 	}
 	return res
 }
+
+// Pow to an integer using binary exponentiation
+// Assumption:
+// - Multiplication is associative
+func PowMod[B constraints.Integer, P constraints.Integer](base B, power P, mod B) B {
+	res := B(1)
+	for power > 0 {
+		if power%2 == 1 {
+			res *= base
+			res %= mod
+		}
+		base *= base
+		base %= mod
+		power /= 2
+	}
+	return res
+}
