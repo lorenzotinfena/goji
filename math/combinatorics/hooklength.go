@@ -3,13 +3,9 @@ package combinatorics
 import "github.com/lorenzotinfena/goji/math"
 
 func HookLength(partition []int, primeMod int) int {
-	partitionTrasnposed := []int{}
-	j := 0
-	for i := len(partition) - 1; i >= 0; i-- {
-		for j < partition[i] {
-			partitionTrasnposed = append(partitionTrasnposed, i+1)
-			j++
-		}
+	partitionTrasnposed := make([]int, partition[0])
+	for i := 0; i < len(partition); i++ {
+		partitionTrasnposed[partition[i]-1] = i + 1
 	}
 
 	productOfHookLengths := 1
@@ -21,6 +17,7 @@ func HookLength(partition []int, primeMod int) int {
 			productOfHookLengths %= primeMod
 		}
 	}
+
 	hookLength := math.Factorial(n, primeMod) * math.ModularInverse(productOfHookLengths, primeMod)
 	hookLength %= primeMod
 	return (hookLength * hookLength) % primeMod
