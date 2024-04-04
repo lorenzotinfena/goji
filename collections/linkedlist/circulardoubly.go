@@ -25,6 +25,7 @@ func NewCircularDoublyLinkedList[T any](equals func(T, T) bool) *CircularDoublyL
 		equals: equals,
 	}
 }
+
 func (l *CircularDoublyLinkedList[T]) Len() int { return l.length }
 
 func (l *CircularDoublyLinkedList[T]) First() T { return l.first.Value }

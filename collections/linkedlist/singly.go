@@ -27,6 +27,7 @@ func NewSinglyLinkedList[T any](equals func(T, T) bool) *SinglyLinkedList[T] {
 		equals: equals,
 	}
 }
+
 func (l *SinglyLinkedList[T]) Len() int { return l.length }
 
 func (l *SinglyLinkedList[T]) First() T { return l.first.Value }
