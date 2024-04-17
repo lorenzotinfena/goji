@@ -33,3 +33,18 @@ func Map[Dom any, Codom any](v []Dom, f func(Dom) Codom) []Codom {
 	}
 	return mapped
 }
+
+func Shrink[T any](v []T) []T {
+	if 4*len(v) <= cap(v) {
+		v1 := make([]T, len(v))
+		copy(v1, v)
+		return v1
+	}
+	return v
+}
+
+func Reverse[T any](v []T) {
+	for i, j := 0, len(v)-1; i < j; i, j = i+1, j-1 {
+		v[i], v[j] = v[j], v[i]
+	}
+}
