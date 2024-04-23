@@ -56,15 +56,15 @@ func (t *HAMT[K, V]) Set(key K, value V) {
 			break
 		}
 		data := (element << bitsPrefixSum[i]) >> (64 - 6)
-		if n.bitmap&(1<<data) != 0 {
-			n = n.next[bits.OnesCount64(uint64(n.bitmap<<(64-data)))]
+		if n.bitmap&((1<<63)>>data) != 0 {
+			n = n.next[bits.OnesCount64(uint64(n.bitmap>>(64-data)))]
 		} else {
 			keyValues := ll.NewSinglyLinkedList[coll.Pair[K, V]](func(a, b coll.Pair[K, V]) bool { return a.First == b.First })
 			keyValues.InsertLast(coll.MakePair(key, value))
 			next := &node[K, V]{bitmap: 0, hash: element, keyValues: *keyValues, next: make([]*node[K, V], 0)}
-			pos := bits.OnesCount64(uint64(n.bitmap << (63 - data)))
+			pos := bits.OnesCount64(uint64(n.bitmap >> (64 - data)))
 			n.next = slices.Insert(n.next, pos, next)
-			n.bitmap |= (1 << data)
+			n.bitmap |= ((1 << 63) >> data)
 			t.length++
 			return
 		}
@@ -86,8 +86,8 @@ func (t *HAMT[K, V]) Get(key K) (V, bool) {
 			break
 		}
 		data := (element << bitsPrefixSum[i]) >> (64 - 6)
-		if n.bitmap&(1<<data) != 0 {
-			n = n.next[bits.OnesCount(n.bitmap<<(64-data))]
+		if n.bitmap&((1<<63)>>data) != 0 {
+			n = n.next[bits.OnesCount(n.bitmap>>(64-data))]
 		} else {
 			var foo V
 			return foo, false
