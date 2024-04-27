@@ -9,13 +9,6 @@ import (
 	"github.com/lorenzotinfena/goji/utils/slices"
 )
 
-// Implementations of amt-like data structures:
-// 							amt | hamt
-// keys ordered				yes | no
-// multiple keys support	yes	| no
-// with value associated	no	| yes
-// For other variants, you can write them by your own!
-
 type node[K comparable, V any] struct {
 	bitmap    uint
 	hash      uint

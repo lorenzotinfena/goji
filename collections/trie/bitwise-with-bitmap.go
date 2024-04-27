@@ -8,27 +8,7 @@ import (
 	"github.com/lorenzotinfena/goji/utils/slices"
 )
 
-// Implementations of amt-like data structures:
-// 							amt | hamt
-// keys ordered				yes | no
-// multiple keys support	yes	| no
-// with value associated	no	| yes
-// For other variants, you can write them by your own!
-
 type nodeBitwiseTrieWithBitmap[S constraints.Unsigned] struct {
-	// segment tree that counts the elements for each of the 5 bits from the most significant
-	// But it sufficient to counts only the 0 bits
-	//
-	// The first value of the segtree rapresent the count of elements with first bit set to 0, which is 3
-	// If I wanna search for the i-th element I will go left if i<count
-	// Take the following vertically elements rapresented as bits:
-	// 0 0 0 1
-	// 0 0 1 0
-	// 0 0 1 0
-	// 1 1 1 1
-	// 1 1 1 1
-	// So If Im looking for the 2-th element I will go left, and then right until the end
-	//sizeSegmentTree [63]uint
 	end    bool // denote if there is an element till here
 	bitmap uint
 	next   []*nodeBitwiseTrieWithBitmap[S]
